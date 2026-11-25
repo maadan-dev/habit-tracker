@@ -1,4 +1,4 @@
-"""Tracking logic (Member A): habits, dates, streaks, freeze rule, rates, insights."""
+"""Tracking logic: habits, dates, streaks, freeze rule, rates, insights."""
 
 from datetime import date, timedelta
 
@@ -6,9 +6,8 @@ ONE_DAY = timedelta(days=1)
 WEEKDAYS = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 
 
-def parse_iso_date(text, today=None):
+def parse_iso_date(text):
     """Validate YYYY-MM-DD format and reject future dates."""
-    today = today or date.today()
     parts = text.split("-")
     valid_lengths = len(parts) == 3 and [len(p) for p in parts] == [4, 2, 2]
     if not valid_lengths or not all(p.isdigit() for p in parts):
@@ -19,7 +18,7 @@ def parse_iso_date(text, today=None):
     except ValueError:
         raise ValueError(f"Invalid calendar date: '{text}'.") from None
 
-    if parsed > today:
+    if parsed > date.today():
         raise ValueError("Future dates are not allowed.")
     return parsed
 
@@ -88,8 +87,8 @@ def remove_habit(data, name):
     return True, f"Removed '{name}'."
 
 
-def mark_done(data, name, day=None, today=None):
-    today = today or date.today()
+def mark_done(data, name, day=None):
+    today = date.today()
     day = day or today
     if day > today:
         return False, "Future dates are not allowed."
@@ -104,9 +103,9 @@ def mark_done(data, name, day=None, today=None):
     return True, f"Marked '{name}' done for {iso}."
 
 
-def current_streak(done, freeze=False, today=None):
+def current_streak(done, freeze=False):
     """Count consecutive days back from today (or yesterday if today isn't done yet)."""
-    today = today or date.today()
+    today = date.today()
     valid = {d for d in done if d <= today}
     if not valid:
         return 0
@@ -165,9 +164,9 @@ def longest_streak(done, freeze=False):
     return best
 
 
-def completion_rate(done, days, today=None):
+def completion_rate(done, days):
     """Completion percentage over the last `days` days (including today)."""
-    today = today or date.today()
+    today = date.today()
     completed = 0
     for offset in range(days):
         if today - timedelta(days=offset) in done:
@@ -175,9 +174,9 @@ def completion_rate(done, days, today=None):
     return (completed / days) * 100
 
 
-def current_week_dates(today=None):
+def current_week_dates():
     """Return the 7 dates from Monday to Sunday for the week containing today."""
-    today = today or date.today()
+    today = date.today()
     monday = today - timedelta(days=today.weekday())
     return [monday + timedelta(days=i) for i in range(7)]
 
@@ -196,23 +195,23 @@ def most_frequent_weekday(done):
     return WEEKDAYS[top_day]
 
 
-def habit_stats(name, entry, freeze=False, today=None):
-    today = today or date.today()
+def habit_stats(name, entry, freeze=False):
+    today = date.today()
     done = {d for d in to_date_set(entry["done_dates"]) if d <= today}
-    week = current_week_dates(today)
+    week = current_week_dates()
     grid = ["x" if d in done else "-" for d in week]
 
     week_done = grid.count("x")
     target = entry["target_per_week"]
-    rate_30d = completion_rate(done, 30, today)
+    rate_30d = completion_rate(done, 30)
     done_30d = round(rate_30d * 30 / 100)
 
     return {
         "name": name,
         "done_today": today in done,
-        "streak": current_streak(done, freeze, today),
+        "streak": current_streak(done, freeze),
         "longest": longest_streak(done, freeze),
-        "rate_7d": completion_rate(done, 7, today),
+        "rate_7d": completion_rate(done, 7),
         "rate_30d": rate_30d,
         "week_done": week_done,
         "target": target,
@@ -224,18 +223,18 @@ def habit_stats(name, entry, freeze=False, today=None):
     }
 
 
-def ranked_stats(data, today=None):
+def ranked_stats(data):
     """Return stats for every habit, sorted by current streak (highest first)."""
     freeze = data["settings"].get("streak_freeze", False)
     rows = [
-        habit_stats(name, entry, freeze, today)
+        habit_stats(name, entry, freeze)
         for name, entry in data["habits"].items()
     ]
     return sorted(rows, key=lambda s: (-s["streak"], s["name"].lower()))
 
 
-def get_insights(data, today=None):
-    rows = ranked_stats(data, today)
+def get_insights(data):
+    rows = ranked_stats(data)
     if not rows:
         return None
 

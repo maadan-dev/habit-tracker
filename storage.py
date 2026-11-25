@@ -1,4 +1,4 @@
-"""Data and persistence (Member C): JSON load/save, startup backup, CSV export."""
+"""Data and persistence: JSON load/save, startup backup, CSV export."""
 
 import csv
 import json
@@ -66,16 +66,16 @@ def _validate_data(raw):
     }
 
 
-def backup_data(filepath=DATA_FILE, backup_dir=BACKUP_DIR):
+def backup_data():
     """Create a timestamped backup copy of the data file on startup."""
-    if not os.path.exists(filepath) or os.path.getsize(filepath) == 0:
+    if not os.path.exists(DATA_FILE) or os.path.getsize(DATA_FILE) == 0:
         return None
 
-    os.makedirs(backup_dir, exist_ok=True)
+    os.makedirs(BACKUP_DIR, exist_ok=True)
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    backup_path = os.path.join(backup_dir, f"habits_{stamp}.json")
+    backup_path = os.path.join(BACKUP_DIR, f"habits_{stamp}.json")
 
-    with open(filepath, encoding="utf-8") as src:
+    with open(DATA_FILE, encoding="utf-8") as src:
         content = src.read()
     with open(backup_path, "w", encoding="utf-8") as dst:
         dst.write(content)
@@ -83,34 +83,34 @@ def backup_data(filepath=DATA_FILE, backup_dir=BACKUP_DIR):
     return backup_path
 
 
-def load_data(filepath=DATA_FILE):
+def load_data():
     """Load habits from JSON, handling missing, empty, or corrupted files."""
-    if not os.path.exists(filepath):
-        return empty_data(), f"No data file found ({filepath}). Starting fresh."
+    if not os.path.exists(DATA_FILE):
+        return empty_data(), f"No data file found ({DATA_FILE}). Starting fresh."
 
-    with open(filepath, encoding="utf-8") as file:
+    with open(DATA_FILE, encoding="utf-8") as file:
         text = file.read().strip()
 
     if not text:
-        return empty_data(), f"Data file ({filepath}) is empty. Starting fresh."
+        return empty_data(), f"Data file ({DATA_FILE}) is empty. Starting fresh."
 
     try:
         raw = json.loads(text)
         data = _validate_data(raw)
-        return data, f"Loaded data from {filepath}."
+        return data, f"Loaded data from {DATA_FILE}."
     except (json.JSONDecodeError, TypeError, ValueError) as err:
         return (
             empty_data(),
-            f"Warning: {filepath} is corrupted ({err}). Starting fresh.",
+            f"Warning: {DATA_FILE} is corrupted ({err}). Starting fresh.",
         )
 
 
-def save_data(data, filepath=DATA_FILE):
+def save_data(data):
     """Save habits and settings to JSON."""
     for entry in data["habits"].values():
         entry["done_dates"] = sorted(set(entry["done_dates"]))
 
-    with open(filepath, "w", encoding="utf-8") as file:
+    with open(DATA_FILE, "w", encoding="utf-8") as file:
         json.dump(data, file, indent=2)
 
 

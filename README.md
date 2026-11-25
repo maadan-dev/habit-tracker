@@ -8,20 +8,13 @@ Command-line daily habit tracker built with the Python standard library only. Co
 python app.py
 ```
 
-## Run Tests
-
-```bash
-python -m unittest -v
-```
-
-## Module Layout (Group of 3 Split)
+## Module Layout
 
 | File | Responsibility |
 | :--- | :--- |
-| `tracker.py` | Member A — tracking logic, validation, streak & freeze algorithms, rates, insights |
-| `app.py` | Member B — CLI menu registry, input loops, tables, weekly grid, text calendar |
-| `storage.py` | Member C — JSON load/save, corrupted/empty file handling, startup backups, CSV export |
-| `test_tracker.py` | Standard library `unittest` suite verifying all four levels |
+| `tracker.py` | Tracking logic, validation, streak & freeze algorithms, rates, insights |
+| `app.py` | CLI menu registry, input loops, tables, weekly grid, text calendar |
+| `storage.py` | JSON load/save, corrupted/empty file handling, startup backups, CSV export |
 
 ## Shared Data Format (`habits.json`)
 

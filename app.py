@@ -1,4 +1,4 @@
-"""Display and input (Member B): menus, tables, weekly grid, and text calendar."""
+"""Display and input: menus, tables, weekly grid, and text calendar."""
 
 import calendar
 from datetime import date
@@ -86,9 +86,9 @@ def pick_habit(data, action):
     return rows[choice - 1]["name"]
 
 
-def show_status(data, today=None):
-    today = today or date.today()
-    rows = ranked_stats(data, today)
+def show_status(data):
+    today = date.today()
+    rows = ranked_stats(data)
     freeze = "ON" if data["settings"].get("streak_freeze") else "OFF"
     print(f"\nToday: {today:%a %d %b %Y}   |   Streak Freeze: {freeze}\n")
 
